@@ -1,0 +1,22 @@
+{% extends 'layouts/index.html' %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1>
+                    Profile
+                </h1>
+                <img src="{{ user.profile.avatar.url }}" width="200" alt="Avatar">
+                <h3>{{ user.username }}</h3>
+                <p>{{ user.first_name }}</p>
+                <p>{{ user.last_name }}</p>
+                <p>{{ user.email }}</p>
+                <p>{{ user.profile.bio }}</p>
+                <p>{{ user.data_joined }}</p>
+                <a class="nav-link" href="/logout/">Logout</a>
+                <a href="update/">Update</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
