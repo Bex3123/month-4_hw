@@ -1,15 +1,18 @@
 from django.urls import path
-
-from post import views
+from .views import (
+    MainView, CategoryProductsView, CategoriesView, ProductsView,
+    ProductDetailView, ProductUpdateView, ProductCreateView,
+    CategoryCreateView, HashtagsView
+)
 
 urlpatterns = [
-    path('', views.main_view),
-    path('products/', views.products_view),
-    path('products/<int:product_id>/', views.product_detail_view, name='product_detail'),
-    path('products/<int:product_id>/update/', views.product_update_view),
-    path('products/create/', views.product_create),
-    path('categories/', views.categories_view),
-    path('categories/create/', views.category_create_view),
-    path('categories/<int:category_id>/', views.category_products_view, name='category_products'),
-    path('hashtags/', views.hashtags_view),
+    path('', MainView.as_view(), name='main'),
+    path('categories/', CategoriesView.as_view(), name='categories'),
+    path('categories/<int:category_id>/', CategoryProductsView.as_view(), name='category_products'),
+    path('products/', ProductsView.as_view(), name='products'),
+    path('product/<int:product_id>/', ProductDetailView.as_view(), name='product_detail'),
+    path('product/<int:product_id>/update/', ProductUpdateView.as_view(), name='product_update'),
+    path('product/create/', ProductCreateView.as_view(), name='product_create'),
+    path('categories/create/', CategoryCreateView.as_view(), name='category_create'),
+    path('hashtags/', HashtagsView.as_view(), name='hashtags'),
 ]

@@ -1,29 +1,32 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views import View
+from django.views.generic import ListView, DetailView, CreateView
 
 from blog import settings
 from .forms import ProductCreateForm, ProductCreateForm2, CommentCreateForm, CategoryCreateForm
 from .models import Product, HashTag, Category, Comment
 
 
-def main_view(request):
-    if request.method == 'GET':
+class MainView(View):
+    def get(self, request):
         return render(request, 'layouts/index.html')
 
 
-def category_products_view(request, category_id):
-    category = get_object_or_404(Category, id=category_id)
-    products = category.products.all()
-    context = {
-        'category': category,
-        'products': products,
-    }
-    return render(request, 'categories/category_products.html', context)
+class CategoryProductsView(View):
+    def get(self, request, category_id):
+        category = get_object_or_404(Category, id=category_id)
+        products = category.products.all()
+        context = {
+            'category': category,
+            'products': products,
+        }
+        return render(request, 'categories/category_products.html', context)
 
 
-def categories_view(request):
-    if request.method == 'GET':
+class CategoriesView(View):
+    def get(self, request):
         categories = Category.objects.all()
         context = {
             "categories": categories,
@@ -31,9 +34,9 @@ def categories_view(request):
         return render(request, 'categories/categories.html', context=context)
 
 
-@login_required
-def products_view(request):
-    if request.method == 'GET':
+class ProductsView(View):
+    @login_required
+    def get(self, request):
         products = Product.objects.all()
         categories = Category.objects.all()
         selected_category = request.GET.get('category')
@@ -57,12 +60,8 @@ def products_view(request):
         else:
             products = products.exclude(user=request.user)
 
-        max_page = products.__len__() / settings.PAGE_SIZE
-
-        if round(max_page) < max_page:
-            max_page = round(max_page) + 1
-        else:
-            max_page = round(max_page)
+        max_page = products.count() / settings.PAGE_SIZE
+        max_page = round(max_page) + 1 if round(max_page) < max_page else round(max_page)
 
         page = int(request.GET.get('page', 1))
 
@@ -80,8 +79,8 @@ def products_view(request):
         return render(request, 'products/products.html', context=context)
 
 
-def product_detail_view(request, product_id=None):
-    if request.method == 'GET':
+class ProductDetailView(View):
+    def get(self, request, product_id=None):
         try:
             product = Product.objects.get(id=product_id)
         except Product.DoesNotExist:
@@ -91,7 +90,8 @@ def product_detail_view(request, product_id=None):
             'form': CommentCreateForm()
         }
         return render(request, 'products/product_detail.html', context)
-    elif request.method == 'POST':
+
+    def post(self, request, product_id=None):
         form = CommentCreateForm(request.POST, request.FILES)
         if form.is_valid():
             Comment.objects.create(product_id=product_id, **form.cleaned_data)
@@ -102,17 +102,16 @@ def product_detail_view(request, product_id=None):
         return render(request, 'products/product_detail.html', context)
 
 
-def product_update_view(request, product_id):
-    try:
-        product = Product.objects.get(id=product_id)
-    except Product.DoesNotExist:
-        return render(request, 'errors/404.html')
-    if request.method == 'GET':
+class ProductUpdateView(View):
+    def get(self, request, product_id):
+        product = get_object_or_404(Product, id=product_id)
         context = {
             "form": ProductCreateForm(instance=product)
         }
         return render(request, 'products/product_update.html', context)
-    elif request.method == 'POST':
+
+    def post(self, request, product_id):
+        product = get_object_or_404(Product, id=product_id)
         form = ProductCreateForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             form.save()
@@ -120,13 +119,14 @@ def product_update_view(request, product_id):
         return render(request, 'products/product_update.html', {"form": form})
 
 
-def product_create(request):
-    if request.method == 'GET':
+class ProductCreateView(View):
+    def get(self, request):
         context = {
             "form": ProductCreateForm2()
         }
         return render(request, 'products/products.create.html', context)
-    elif request.method == 'POST':
+
+    def post(self, request):
         form = ProductCreateForm2(request.POST, request.FILES)
         if form.is_valid():
             Product.objects.create(**form.cleaned_data)
@@ -137,14 +137,14 @@ def product_create(request):
         return render(request, 'products/products.create.html', context)
 
 
-def category_create_view(request):
-    if request.method == 'GET':
+class CategoryCreateView(View):
+    def get(self, request):
         context = {
             "form": CategoryCreateForm(),
         }
         return render(request, 'categories/categories_create.html', context=context)
 
-    elif request.method == 'POST':
+    def post(self, request):
         form = CategoryCreateForm(request.POST)
         if form.is_valid():
             Category.objects.create(**form.cleaned_data)
@@ -155,11 +155,10 @@ def category_create_view(request):
         return render(request, 'categories/categories_create.html', context=context)
 
 
-def hashtags_view(request):
-    if request.method == 'GET':
+class HashtagsView(View):
+    def get(self, request):
         hashtags = HashTag.objects.all()
         context = {
             "hashtags": hashtags,
         }
         return render(request, 'hashtags/hashtags.html', context=context)
-
